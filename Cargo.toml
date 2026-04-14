@@ -1,0 +1,175 @@
+# SPDX-FileCopyrightText: 2026 Emily <hello@emily.moe>
+#
+# SPDX-License-Identifier: BlueOak-1.0.0
+
+[package]
+name = "autopen"
+version = "0.1.0"
+description = "A cryptographic signing service with an object‐capability interface"
+categories = [
+    "command-line-utilities",
+    "cryptography",
+    "network-programming",
+    "security",
+]
+keywords = [
+    "cli",
+    "cryptography",
+    "networking",
+    "remote-signing",
+    "security",
+    "signature",
+    "signing",
+]
+repository = "https://github.com/emilazy/autopen"
+license = "BlueOak-1.0.0"
+include = [
+    "/.cargo",
+    "/Cargo.lock",
+    "/Cargo.lock.license",
+    "/Cargo.toml",
+    "/LICENSES",
+    "/README.md",
+    "/clippy.toml",
+    "/deny.toml",
+    "/src",
+]
+rust-version = "1.95"
+edition = "2024"
+
+[dependencies]
+
+[lints.rust]
+# Lint groups.
+let_underscore = { level = "warn", priority = -1 }
+rust_2018_idioms = { level = "warn", priority = -1 }
+unused = { level = "warn", priority = -1 }
+
+unsafe_code = "forbid"
+unsafe_op_in_unsafe_fn = "forbid"
+
+# Selected allowed‐by‐default lints.
+ambiguous_negative_literals = "warn"
+closure_returning_async_block = "warn"
+deref_into_dyn_supertrait = "warn"
+impl_trait_redundant_captures = "warn"
+macro_use_extern_crate = "warn"
+meta_variable_misuse = "warn"
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+redundant_imports = "warn"
+redundant_lifetimes = "warn"
+single_use_lifetimes = "warn"
+trivial_casts = "warn"
+trivial_numeric_casts = "warn"
+unit_bindings = "warn"
+unnameable_types = "warn"
+unreachable_pub = "warn"
+unused_crate_dependencies = "warn"
+unused_import_braces = "warn"
+unused_lifetimes = "warn"
+unused_qualifications = "warn"
+variant_size_differences = "warn"
+
+[lints.rustdoc]
+missing_crate_level_docs = "warn"
+private_doc_tests = "warn"
+unescaped_backticks = "warn"
+
+[lints.clippy]
+# Lint groups.
+cargo = { level = "warn", priority = -1 }
+# Clippy recommends against enabling the nursery group as a whole, but
+# it’s convenient and they seem to be net beneficial for now…
+nursery = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+
+# Redundant to `cargo deny bans`.
+multiple_crate_versions = "allow"
+
+# Conflicts with `unreachable_pub`; see
+# <https://github.com/rust-lang/rust-clippy/issues/5369>.
+redundant_pub_crate = "allow"
+
+# Selected lints from `clippy::restriction`.
+absolute_paths = "warn"
+alloc_instead_of_core = "warn"
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+arbitrary_source_item_ordering = "warn"
+arithmetic_side_effects = "warn"
+as_conversions = "warn"
+as_pointer_underscore = "warn"
+as_underscore = "warn"
+assertions_on_result_states = "warn"
+cfg_not_test = "warn"
+clone_on_ref_ptr = "warn"
+dbg_macro = "warn"
+decimal_literal_representation = "warn"
+default_union_representation = "warn"
+doc_paragraphs_missing_punctuation = "warn"
+empty_drop = "warn"
+empty_enum_variants_with_brackets = "warn"
+empty_structs_with_brackets = "warn"
+exhaustive_enums = "warn"
+exhaustive_structs = "warn"
+exit = "warn"
+field_scoped_visibility_modifiers = "warn"
+float_cmp_const = "warn"
+fn_to_numeric_cast_any = "warn"
+if_then_some_else_none = "warn"
+indexing_slicing = "warn"
+infinite_loop = "warn"
+inline_asm_x86_att_syntax = "warn"
+large_include_file = "warn"
+let_underscore_must_use = "warn"
+lossy_float_literal = "warn"
+map_err_ignore = "warn"
+map_with_unused_argument_over_ranges = "warn"
+mem_forget = "warn"
+missing_assert_message = "warn"
+missing_docs_in_private_items = "warn"
+mixed_read_write_in_expression = "warn"
+module_name_repetitions = "warn"
+multiple_inherent_impl = "warn"
+multiple_unsafe_ops_per_block = "warn"
+non_zero_suggestions = "warn"
+panic = "warn"
+partial_pub_fields = "warn"
+pointer_format = "warn"
+pub_without_shorthand = "warn"
+rc_buffer = "warn"
+rc_mutex = "warn"
+redundant_test_prefix = "warn"
+renamed_function_params = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+return_and_then = "warn"
+same_name_method = "warn"
+self_named_module_files = "warn"
+semicolon_inside_block = "warn"
+shadow_unrelated = "warn"
+str_to_string = "warn"
+string_lit_chars_any = "warn"
+string_slice = "warn"
+suspicious_xor_used_as_pow = "warn"
+tests_outside_test_module = "warn"
+todo = "warn"
+try_err = "warn"
+undocumented_unsafe_blocks = "warn"
+unimplemented = "warn"
+unnecessary_safety_comment = "warn"
+unnecessary_safety_doc = "warn"
+unnecessary_self_imports = "warn"
+unseparated_literal_suffix = "warn"
+unused_result_ok = "warn"
+unused_trait_names = "warn"
+unwrap_used = "warn"
+verbose_file_reads = "warn"
+wildcard_enum_match_arm = "warn"
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+overflow-checks = true
+strip = "debuginfo"

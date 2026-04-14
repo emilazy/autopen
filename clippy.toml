@@ -1,0 +1,43 @@
+# SPDX-FileCopyrightText: 2026 Emily <hello@emily.moe>
+#
+# SPDX-License-Identifier: BlueOak-1.0.0
+
+absolute-paths-max-segments = 3
+avoid-breaking-exported-api = false
+check-private-items = true
+
+module-item-order-groupings = [
+    [
+        "modules",
+        [
+            "extern_crate",
+            "foreign_mod",
+            "mod",
+        ],
+    ],
+    [
+        "use",
+        [
+            "use",
+        ],
+    ],
+    [
+        "everything_else",
+        [
+            "const",
+            "enum",
+            "fn",
+            "global_asm",
+            "impl",
+            "macro",
+            "static",
+            "struct",
+            "trait",
+            "trait_alias",
+            "ty_alias",
+            "union",
+        ],
+    ],
+]
+module-items-ordered-within-groupings = ["modules", "use"]
+source-item-ordering = ["module"]

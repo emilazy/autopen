@@ -1,0 +1,12 @@
+# SPDX-FileCopyrightText: 2026 Emily <hello@emily.moe>
+#
+# SPDX-License-Identifier: BlueOak-1.0.0
+
+[graph]
+all-features = true
+
+[bans]
+multiple-versions-include-dev = true
+
+[licenses]
+allow = ["BlueOak-1.0.0"]

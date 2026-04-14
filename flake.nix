@@ -12,6 +12,11 @@
       url = "github:numtide/treefmt-nix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+
+    rustsec-advisory-db = {
+      url = "github:RustSec/advisory-db";
+      flake = false;
+    };
   };
 
   outputs =
@@ -19,6 +24,7 @@
       self,
       nixpkgs,
       treefmt-nix,
+      rustsec-advisory-db,
     }:
     let
       inherit (nixpkgs.lib)
@@ -37,7 +43,8 @@
       treefmtEval = eachSystem (_system: pkgs: treefmt-nix.lib.evalModule pkgs ./nix/treefmt.nix);
 
       devChecks = eachSystem (
-        system: pkgs: {
+        system: pkgs:
+        {
           reuse = pkgs.runCommand "reuse-check" { nativeBuildInputs = [ pkgs.reuse ]; } ''
             cd ${self}
             reuse lint
@@ -46,16 +53,45 @@
 
           treefmt = treefmtEval.${system}.config.build.check self;
         }
+        // pkgs.callPackages ./nix/cargo-checks.nix {
+          inherit (self.packages.${system}) autopen;
+          inherit rustsec-advisory-db;
+        }
       );
     in
     {
-      checks = eachSystem (system: _pkgs: devChecks.${system});
+      packages = eachSystem (
+        _system: pkgs:
+        let
+          autopen = pkgs.callPackage ./nix/autopen/package.nix { };
+        in
+        {
+          inherit autopen;
+          default = autopen;
+        }
+      );
+
+      overlays.default = final: _prev: {
+        autopen = final.callPackage ./nix/autopen/package.nix { };
+      };
+
+      checks = eachSystem (
+        system: _pkgs:
+        {
+          inherit (self.packages.${system}) default;
+        }
+        // devChecks.${system}
+      );
 
       devShells = eachSystem (
         system: pkgs: {
           default = pkgs.mkShell {
             inputsFrom = attrValues devChecks.${system};
-            packages = attrValues treefmtEval.${system}.config.build.programs;
+
+            packages = [
+              pkgs.rust-analyzer
+            ]
+            ++ attrValues treefmtEval.${system}.config.build.programs;
           };
         }
       );

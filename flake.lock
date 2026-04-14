@@ -19,7 +19,24 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
+        "rustsec-advisory-db": "rustsec-advisory-db",
         "treefmt-nix": "treefmt-nix"
+      }
+    },
+    "rustsec-advisory-db": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1781704220,
+        "narHash": "sha256-iVS8BzftK5Vu2v/hZggTJgC71JwqJVVAr1mO76rvOTs=",
+        "owner": "RustSec",
+        "repo": "advisory-db",
+        "rev": "aa90516a25637b1a66c677e86542a03a6261d0f8",
+        "type": "github"
+      },
+      "original": {
+        "owner": "RustSec",
+        "repo": "advisory-db",
+        "type": "github"
       }
     },
     "treefmt-nix": {

@@ -14,6 +14,7 @@ let
     attrValues
     concatMap
     getExe
+    mkAfter
     ;
 in
 
@@ -41,11 +42,31 @@ in
           in
           concatMap (formatter: formatter.includes) (attrValues otherFormatters);
       };
+
+      rumdl-check = {
+        options = mkAfter [
+          "--config"
+          "${(pkgs.formats.toml { }).generate ".rumdl.toml" {
+            MD013 = {
+              reflow = true;
+              reflow-mode = "normalize";
+            };
+          }}"
+        ];
+      };
     };
   };
 
   programs = {
     nixfmt = {
+      enable = true;
+    };
+
+    rustfmt = {
+      enable = true;
+    };
+
+    rumdl-check = {
       enable = true;
     };
 
@@ -56,6 +77,52 @@ in
     shellcheck = {
       enable = true;
       extra-checks = [ "all" ];
+    };
+
+    taplo = {
+      enable = true;
+
+      settings = {
+        formatting = {
+          align_comments = false;
+          indent_string = "    ";
+          reorder_keys = true;
+          reorder_arrays = true;
+          reorder_inline_tables = true;
+        };
+
+        rule = [
+          {
+            include = [ "**/Cargo.toml" ];
+            keys = [ "package" ];
+            formatting = {
+              reorder_keys = false;
+            };
+          }
+
+          {
+            include = [ "**/Cargo.toml" ];
+            keys = [
+              "dependencies"
+              "dev-dependencies"
+              "build-dependencies"
+              "target.*.dependencies"
+              "target.*.dev-dependencies"
+              "target.*.build-dependencies"
+            ];
+            formatting = {
+              reorder_inline_tables = false;
+            };
+          }
+
+          {
+            include = [ "**/clippy.toml" ];
+            formatting = {
+              reorder_arrays = false;
+            };
+          }
+        ];
+      };
     };
   };
 }

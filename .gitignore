@@ -5,3 +5,7 @@
 /.direnv
 result
 result-*
+
+/.rumdl_cache
+
+/target

@@ -1,0 +1,19 @@
+# SPDX-FileCopyrightText: 2026 Emily <hello@emily.moe>
+#
+# SPDX-License-Identifier: BlueOak-1.0.0
+
+[advisories]
+informational_warnings = ["notice", "unmaintained", "unsound"]
+
+[database]
+fetch = false
+stale = true
+
+[output]
+deny = ["warnings"]
+quiet = false
+
+[yanked]
+# We can’t access the crates.io index to query for yanked crates inside
+# a Nix build.
+enabled = false
