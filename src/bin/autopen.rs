@@ -4,12 +4,20 @@
 
 //! The main `autopen(1)` executable entry point.
 
-fn main() {
-    println!("Hello, world!");
-}
+#![expect(
+    unused_crate_dependencies,
+    reason = "https://github.com/rust-lang/rust/issues/95513"
+)]
 
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn placeholder() {}
+use color_eyre::eyre;
+
+#[cfg_attr(
+    test,
+    expect(
+        clippy::missing_errors_doc,
+        reason = "https://github.com/rust-lang/rust-clippy/issues/14491"
+    )
+)]
+fn main() -> eyre::Result<()> {
+    autopen::main()
 }

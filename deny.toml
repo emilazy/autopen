@@ -9,4 +9,4 @@ all-features = true
 multiple-versions-include-dev = true
 
 [licenses]
-allow = ["BlueOak-1.0.0"]
+allow = ["BlueOak-1.0.0", "MIT", "Unicode-3.0"]
