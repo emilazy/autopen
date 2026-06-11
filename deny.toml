@@ -9,4 +9,11 @@ all-features = true
 multiple-versions-include-dev = true
 
 [licenses]
-allow = ["BlueOak-1.0.0", "MIT", "Unicode-3.0"]
+allow = ["BlueOak-1.0.0", "ISC", "MIT", "Unicode-3.0"]
+
+[sources]
+allow-git = [
+    # We need file description passing; see
+    # <https://github.com/capnproto/capnproto-rust/pull/666>.
+    "https://github.com/emilazy/capnproto-rust.git",
+]

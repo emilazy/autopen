@@ -24,6 +24,7 @@ in
 
     excludes = [
       ".editorconfig"
+      "*.capnp"
       "*.license"
       "LICENSES/*.txt"
     ];

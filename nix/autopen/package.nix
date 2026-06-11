@@ -5,6 +5,7 @@
 {
   lib,
   rustPlatform,
+  capnproto,
 }:
 
 let
@@ -26,6 +27,9 @@ let
 
   cargoLock = {
     lockFile = ../../Cargo.lock;
+    outputHashes = {
+      "capnp-0.25.5" = "sha256-L8mVQIY3trr5ORFVRdOD83Uurt2f5/qaLZJuwr8a7LI=";
+    };
   };
 in
 
@@ -34,6 +38,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   version = "0.1.0";
 
   inherit src cargoLock;
+
+  nativeBuildInputs = [
+    capnproto
+  ];
 
   useNextest = true;
 

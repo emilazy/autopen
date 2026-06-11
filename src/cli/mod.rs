@@ -4,6 +4,10 @@
 
 //! The implementation of the `autopen(1)` command‐line interface.
 
+mod sign;
+mod signing_key;
+mod verify;
+
 use clap::Parser as _;
 use color_eyre::eyre::{self, WrapErr as _};
 use tracing::debug;
@@ -22,8 +26,6 @@ pub fn main() -> eyre::Result<()> {
         .install()
         .expect("`color_eyre` hook should install successfully");
 
-    #[expect(unreachable_code, reason = "no commands yet")]
-    #[expect(unused_variables, reason = "no commands yet")]
     let cli = Autopen::parse();
 
     tracing_subscriber::registry()
@@ -78,8 +80,21 @@ struct GlobalOptions {
 }
 
 /// Subcommands of `autopen(1)`.
+#[cfg_attr(
+    // Work around <https://github.com/rust-lang/rust-clippy/issues/16934>.
+    not(test),
+    expect(
+        clippy::missing_docs_in_private_items,
+        reason = "subcommands are documented by their respective types"
+    )
+)]
 #[derive(Debug, clap::Subcommand)]
-enum Command {}
+enum Command {
+    Sign(sign::Command),
+    Verify(verify::Command),
+    #[command(subcommand)]
+    SigningKey(signing_key::Command),
+}
 
 /// An `autopen(1)` subcommand.
 pub(crate) trait Subcommand: clap::FromArgMatches {
@@ -98,8 +113,12 @@ pub(crate) trait Subcommand: clap::FromArgMatches {
 }
 
 impl Subcommand for Command {
-    async fn run(self, _local: Bootstrap) -> eyre::Result<()> {
-        match self {}
+    async fn run(self, local: Bootstrap) -> eyre::Result<()> {
+        match self {
+            Self::Sign(cmd) => cmd.run(local).await,
+            Self::Verify(cmd) => cmd.run(local).await,
+            Self::SigningKey(cmd) => cmd.run(local).await,
+        }
     }
 }
 
