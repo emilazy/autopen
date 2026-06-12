@@ -13,7 +13,7 @@ use std::{
 
 use crate::{
     autopen_capnp::{local::file, verification_key},
-    local::{Serialize, SerializeFile},
+    local::{Serialize, SerializeFile, restorer},
     x509,
 };
 
@@ -28,10 +28,13 @@ pub(crate) enum VerificationKey {
 impl Serialize for VerificationKey {
     type Owned = verification_key::Owned;
 
-    fn read_capnp(reader: verification_key::Reader<'_>) -> capnp::Result<Self> {
+    fn read_capnp(
+        restorer: &restorer::Client,
+        reader: verification_key::Reader<'_>,
+    ) -> capnp::Result<Self> {
         match reader.which()? {
             verification_key::Rsa3072Pkcs1Sha256(reader) => {
-                Ok(rsa3072_pkcs1_sha256::VerificationKey::read_capnp(reader?)?.into())
+                Ok(rsa3072_pkcs1_sha256::VerificationKey::read_capnp(restorer, reader?)?.into())
             }
             verification_key::Reserved(()) => Err(capnp::NotInSchema(1).into()),
         }

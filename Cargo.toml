@@ -43,15 +43,22 @@ edition = "2024"
 camino = "1.2.2"
 capnp = { git = "https://github.com/emilazy/capnproto-rust.git", branch = "push-xstmntksusmk" }
 capnp-futures = { git = "https://github.com/emilazy/capnproto-rust.git", branch = "push-xstmntksusmk", default-features = false, features = [
-    "tokio",
+    "tokio-unix-fd-stream",
 ] }
 capnp-rpc = { git = "https://github.com/emilazy/capnproto-rust.git", branch = "push-xstmntksusmk", default-features = false }
-clap = { version = "4.6.1", features = ["derive", "env", "unstable-markdown"] }
+clap = { version = "4.6.1", features = [
+    "derive",
+    "env",
+    "unstable-markdown",
+    "unstable-v5",
+] }
 color-eyre = { version = "0.6.5", features = ["issue-url"] }
 graviola = "0.4.0"
+iddqd = { version = "0.4.5", default-features = false }
 rcgen = { version = "0.14.8", default-features = false, features = ["pem"] }
+rustix = { version = "1.1.4", features = ["fs"] }
 time = { version = "0.3.49", features = ["parsing"] }
-tokio = { version = "1.52.3", features = ["fs", "macros", "rt"] }
+tokio = { version = "1.52.3", features = ["fs", "macros", "rt", "signal"] }
 tracing = "0.1.44"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }

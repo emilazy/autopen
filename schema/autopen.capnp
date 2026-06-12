@@ -39,7 +39,7 @@ struct SigningKey {
 
     union {
         software @0 :Software;
-        reserved @1 :Void;
+        remote @1 :Remote;
     }
 
     struct Software {
@@ -61,10 +61,54 @@ struct SigningKey {
             # <https://www.rfc-editor.org/info/rfc8017/#appendix-A.1.2>
         }
     }
+
+    struct Remote {
+        # A signing key accessed through a server.
+
+        remoteRef @0 :Local.RemoteRef;
+        # A persistent reference to the remote signing key.
+
+        verificationKey @1 :VerificationKey;
+        # The verification key corresponding to the remote signing key.
+    }
 }
 
-interface Local {
+interface Restorer(Ref) {
+    # Access to restore sturdy references in a given per‐realm format.
+
+    restore @0 (sturdyRef :Ref) -> (cap :Capability);
+    # Restores a sturdy reference to a capability.
+}
+
+interface Bootstrap(Ref) {
+    # The bootstrap interface for a context.
+
+    getRestorer @0 () -> (restorer :Restorer(Ref));
+    # Returns a restorer for sturdy references.
+}
+
+interface UnixSocketServer extends(Bootstrap(FileRef)) {
+    # A Unix socket server.
+
+    interface FileRef {
+        # A persistent reference to an object, identified by a POSIX
+        # file identity and passed between vats as a file descriptor
+        # with read access.
+    }
+}
+
+interface Local extends(Bootstrap(RemoteRef)) {
     # A local context.
+
+    struct RemoteRef {
+        # A persistent reference to an object on a remote server.
+
+        socketPath @0 :Text;
+        # The path to the server’s Unix socket.
+
+        fileRefPath @1 :Text;
+        # The path to the file reference corresponding to the remote object.
+    }
 
     struct File {
         # The top‐level structure of a persisted file.

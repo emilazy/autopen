@@ -38,7 +38,9 @@ impl Subcommand for Command {
             .wrap_err("Failed to request verification key")?;
         let verification_key = response
             .get()
-            .and_then(|results| VerificationKey::read_capnp(results.get_verification_key()?))
+            .and_then(|results| {
+                VerificationKey::read_capnp(local.restorer(), results.get_verification_key()?)
+            })
             .wrap_err("Failed to read verification key")?;
         local::save(&self.output, &verification_key, Secrecy::Public).await?;
         Ok(())

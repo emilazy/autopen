@@ -16,7 +16,7 @@ use graviola::signing::rsa;
 
 use crate::{
     autopen_capnp::verification_key::rsa3072_pkcs1_sha256,
-    local::Serialize,
+    local::{Serialize, restorer},
     verification_key::{Verifier, VerifyError},
     x509,
 };
@@ -106,7 +106,10 @@ impl Debug for VerificationKey {
 impl Serialize for VerificationKey {
     type Owned = rsa3072_pkcs1_sha256::Owned;
 
-    fn read_capnp(reader: rsa3072_pkcs1_sha256::Reader<'_>) -> capnp::Result<Self> {
+    fn read_capnp(
+        _restorer: &restorer::Client,
+        reader: rsa3072_pkcs1_sha256::Reader<'_>,
+    ) -> capnp::Result<Self> {
         reader
             .get_pkcs1_der()?
             .as_array()

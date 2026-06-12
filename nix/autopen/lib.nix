@@ -17,14 +17,20 @@
 # TODO: Many of these will probably have to handle multiple paths.
 
 let
+  inherit (builtins)
+    path
+    ;
+
   inherit (lib)
     concatMap
     concatMapStringsSep
     extendMkDerivation
     getLib
+    hashString
     head
     isAttrs
     isDerivation
+    isPath
     match
     splitStringBy
     toLower
@@ -170,6 +176,50 @@ let
         });
       in
       signingKey;
+
+    remote =
+      {
+        name,
+        socketPath ? "/run/autopen/socket",
+        verificationKey,
+      }@args:
+      let
+        verificationKeyPath = args.verificationKey;
+
+        verificationKey = pathDerivation verificationKeyPath {
+          name = "${name}-verification-key";
+        };
+
+        # TODO: Especially explain this!
+        fileRefPath = path {
+          path = ./.;
+          name = "${name}-key-handle-${hashString "sha256" "${verificationKey}"}";
+          filter = _: _: false;
+        };
+      in
+      assert isPath verificationKeyPath;
+      mkAutopenDerivation {
+        name = "${name}-signing-key";
+
+        autopenArgs = [
+          "signing-key"
+          "remote"
+          "create"
+          {
+            inherit socketPath fileRefPath verificationKey;
+            output = placeholder "out";
+          }
+        ];
+
+        allowedRequisites = [
+          "out"
+          fileRefPath
+        ];
+
+        passthru = {
+          inherit socketPath fileRefPath verificationKey;
+        };
+      };
   };
 
   sign =

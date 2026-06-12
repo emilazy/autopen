@@ -4,6 +4,7 @@
 
 //! The implementation of the `autopen(1)` command‐line interface.
 
+mod serve;
 mod sign;
 mod signing_key;
 mod verify;
@@ -93,6 +94,7 @@ struct GlobalOptions {
 enum Command {
     Sign(sign::Command),
     Verify(verify::Command),
+    Serve(serve::Command),
     #[command(subcommand)]
     SigningKey(signing_key::Command),
     #[command(subcommand)]
@@ -120,6 +122,7 @@ impl Subcommand for Command {
         match self {
             Self::Sign(cmd) => cmd.run(local).await,
             Self::Verify(cmd) => cmd.run(local).await,
+            Self::Serve(cmd) => cmd.run(local).await,
             Self::SigningKey(cmd) => cmd.run(local).await,
             Self::X509(cmd) => cmd.run(local).await,
         }

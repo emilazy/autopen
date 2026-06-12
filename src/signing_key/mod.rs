@@ -4,11 +4,12 @@
 
 //! Signing keys.
 
+pub(crate) mod remote;
 pub(crate) mod software;
 
 use crate::{
     autopen_capnp::{local::file, signer, signing_key},
-    local::{Serialize, SerializeFile},
+    local::{Serialize, SerializeFile, restorer},
 };
 
 /// A signing key.
@@ -17,6 +18,8 @@ use crate::{
 pub(crate) enum SigningKey {
     /// A software signing key.
     Software(software::SigningKey),
+    /// A remote signing key.
+    Remote(remote::SigningKey),
 }
 
 impl SigningKey {
@@ -25,6 +28,7 @@ impl SigningKey {
     pub(crate) fn into_signer(self) -> signer::Client {
         match self {
             Self::Software(key) => key.into_signer(),
+            Self::Remote(key) => capnp_rpc::new_client(key),
         }
     }
 }
@@ -32,16 +36,24 @@ impl SigningKey {
 impl Serialize for SigningKey {
     type Owned = signing_key::Owned;
 
-    fn read_capnp(reader: signing_key::Reader<'_>) -> capnp::Result<Self> {
+    fn read_capnp(
+        restorer: &restorer::Client,
+        reader: signing_key::Reader<'_>,
+    ) -> capnp::Result<Self> {
         match reader.which()? {
-            signing_key::Software(reader) => Ok(software::SigningKey::read_capnp(reader?)?.into()),
-            signing_key::Reserved(()) => Err(capnp::NotInSchema(1).into()),
+            signing_key::Software(reader) => {
+                Ok(software::SigningKey::read_capnp(restorer, reader?)?.into())
+            }
+            signing_key::Remote(reader) => {
+                Ok(remote::SigningKey::read_capnp(restorer, reader?)?.into())
+            }
         }
     }
 
     fn build_capnp(&self, builder: signing_key::Builder<'_>) -> capnp::Result<()> {
         match self {
             Self::Software(key) => key.build_capnp(builder.init_software()),
+            Self::Remote(key) => key.build_capnp(builder.init_remote()),
         }
     }
 }
@@ -64,5 +76,11 @@ impl SerializeFile for SigningKey {
 impl From<software::SigningKey> for SigningKey {
     fn from(key: software::SigningKey) -> Self {
         Self::Software(key)
+    }
+}
+
+impl From<remote::SigningKey> for SigningKey {
+    fn from(key: remote::SigningKey) -> Self {
+        Self::Remote(key)
     }
 }

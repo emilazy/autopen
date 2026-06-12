@@ -66,6 +66,8 @@ rustPlatform.buildRustPackage (finalAttrs: {
 
       mkTest = scope.callPackage ./tests { };
 
+      test-remote = scope.callPackage ./tests/remote.nix { };
+
       tests = {
         software-key = autopen.mkTest {
           signingKey = autopen.lib.signingKey.import {

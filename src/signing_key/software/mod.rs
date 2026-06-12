@@ -8,7 +8,7 @@ pub(crate) mod rsa3072_pkcs1_sha256;
 
 use crate::{
     autopen_capnp::{signer, signing_key::software},
-    local::Serialize,
+    local::{Serialize, restorer},
 };
 
 /// A software signing key.
@@ -32,10 +32,13 @@ impl SigningKey {
 impl Serialize for SigningKey {
     type Owned = software::Owned;
 
-    fn read_capnp(reader: software::Reader<'_>) -> capnp::Result<Self> {
+    fn read_capnp(
+        restorer: &restorer::Client,
+        reader: software::Reader<'_>,
+    ) -> capnp::Result<Self> {
         match reader.which()? {
             software::Rsa3072Pkcs1Sha256(reader) => {
-                Ok(rsa3072_pkcs1_sha256::SigningKey::read_capnp(reader?)?.into())
+                Ok(rsa3072_pkcs1_sha256::SigningKey::read_capnp(restorer, reader?)?.into())
             }
             software::Reserved(()) => Err(capnp::NotInSchema(1).into()),
         }

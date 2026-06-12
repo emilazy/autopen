@@ -10,7 +10,7 @@ use capnp_futures::io::{AsyncFdReadExt as _, serialize, tokio::Compat};
 use color_eyre::eyre::{self, WrapErr as _};
 use tokio::fs::File;
 
-use crate::autopen_capnp::local::file;
+use crate::{autopen_capnp::local::file, local::restorer};
 
 /// A type that can be serialized to and deserialized from a Cap’n
 /// Proto structure.
@@ -23,7 +23,10 @@ pub(crate) trait Serialize: Sized {
     /// # Errors
     ///
     /// Returns an error if deserialization fails.
-    fn read_capnp(reader: <Self::Owned as Owned>::Reader<'_>) -> capnp::Result<Self>;
+    fn read_capnp(
+        restorer: &restorer::Client,
+        reader: <Self::Owned as Owned>::Reader<'_>,
+    ) -> capnp::Result<Self>;
 
     /// Builds a serialized Cap’n Proto structure.
     ///
@@ -58,11 +61,15 @@ pub(crate) trait SerializeFile: Serialize {
 ///
 /// Returns an error if the file cannot be read or
 /// deserialization fails.
-pub(crate) async fn load<T: SerializeFile>(path: &Utf8Path) -> eyre::Result<T> {
+pub(crate) async fn load<T: SerializeFile>(
+    restorer: &restorer::Client,
+    path: &Utf8Path,
+) -> eyre::Result<T> {
     load_file(path)
         .await
         .and_then(|message| {
             T::read_capnp(
+                restorer,
                 T::get_from_file(message.get()?)
                     .ok_or_else(|| capnp::Error::failed(format!("Not a {}", T::NAME)))??,
             )

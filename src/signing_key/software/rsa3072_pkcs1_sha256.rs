@@ -17,7 +17,7 @@ use tracing::{debug, error, record_all};
 
 use crate::{
     autopen_capnp::{signer, signing_key::software::rsa3072_pkcs1_sha256},
-    local::Serialize,
+    local::{Serialize, restorer},
     verification_key::{self, rsa3072_pkcs1_sha256::VerificationKey},
 };
 
@@ -133,7 +133,10 @@ impl Debug for SigningKey {
 impl Serialize for SigningKey {
     type Owned = rsa3072_pkcs1_sha256::Owned;
 
-    fn read_capnp(reader: rsa3072_pkcs1_sha256::Reader<'_>) -> capnp::Result<Self> {
+    fn read_capnp(
+        _restorer: &restorer::Client,
+        reader: rsa3072_pkcs1_sha256::Reader<'_>,
+    ) -> capnp::Result<Self> {
         Self::from_pkcs1_der(reader.get_pkcs1_der()?)
             .map_err(|err| capnp::Error::failed(err.to_string()))
     }
