@@ -7,7 +7,7 @@
 use std::rc::Rc;
 
 use camino::Utf8PathBuf;
-use color_eyre::eyre::{self, WrapErr as _, eyre};
+use color_eyre::eyre::{self, OptionExt as _, WrapErr as _, eyre};
 use iddqd::IdHashMap;
 use tokio::{fs::File, net::UnixListener, signal, task::JoinSet};
 use tracing::{error, info};
@@ -21,8 +21,10 @@ use crate::{cli::Subcommand, local::Bootstrap, signing_key::SigningKey, unix_soc
 #[derive(Debug, clap::Args)]
 pub(crate) struct Command {
     /// The path to bind the server socket to.
+    ///
+    /// This can be omitted to use systemd socket activation.
     #[arg(long, value_name = "PATH")]
-    socket_path: Utf8PathBuf,
+    socket_path: Option<Utf8PathBuf>,
     /// Map a file reference to a signing key.
     #[arg(
         long = "signing-key-ref",
@@ -34,7 +36,7 @@ pub(crate) struct Command {
 
 impl Subcommand for Command {
     #[tracing::instrument(level = tracing::Level::DEBUG)]
-    async fn run(self, local: Bootstrap) -> eyre::Result<()> {
+    async fn run(self, mut local: Bootstrap) -> eyre::Result<()> {
         let mut refs = IdHashMap::default();
         for key_ref in self.signing_key_refs {
             let [file_ref_path, signing_key_path] =
@@ -53,8 +55,18 @@ impl Subcommand for Command {
         }
         let server = Rc::new(unix_socket_server::Bootstrap::new(refs));
 
-        let listener = UnixListener::bind(&self.socket_path)
-            .wrap_err_with(|| format!("Failed to listen on {}", self.socket_path))?;
+        let listener = match self.socket_path {
+            Some(path) => {
+                UnixListener::bind(&path).wrap_err_with(|| format!("Failed to listen on {path}"))?
+            }
+            None => local
+                .take_sockets()
+                .take_unix_listener("autopen.socket")
+                .wrap_err("Failed to listen on socket activation file descriptor")?
+                .ok_or_eyre(
+                    "No socket path specified and no socket activation file descriptors found",
+                )?,
+        };
 
         info!("Listening for connections…");
         let mut tasks = JoinSet::new();

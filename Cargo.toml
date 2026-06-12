@@ -63,6 +63,9 @@ tracing = "0.1.44"
 tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
+[target.'cfg(target_os = "linux")'.dependencies]
+listen-fds = "0.1.0"
+
 [build-dependencies]
 capnpc = { git = "https://github.com/emilazy/capnproto-rust.git", branch = "push-xstmntksusmk" }
 
@@ -72,7 +75,7 @@ let_underscore = { level = "warn", priority = -1 }
 rust_2018_idioms = { level = "warn", priority = -1 }
 unused = { level = "warn", priority = -1 }
 
-unsafe_code = "forbid"
+unsafe_code = "deny"
 unsafe_op_in_unsafe_fn = "forbid"
 
 # Selected allowed‐by‐default lints.

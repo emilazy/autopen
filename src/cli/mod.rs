@@ -15,7 +15,7 @@ use color_eyre::eyre::{self, WrapErr as _};
 use tracing::debug;
 use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
-use crate::local::Bootstrap;
+use crate::{local::Bootstrap, socket_activation::ReceivedSockets};
 
 #[doc(hidden)]
 pub fn main() -> eyre::Result<()> {
@@ -27,6 +27,18 @@ pub fn main() -> eyre::Result<()> {
         .add_issue_metadata("version", env!("CARGO_PKG_VERSION"))
         .install()
         .expect("`color_eyre` hook should install successfully");
+
+    // SAFETY: The process just started. Installing an eyre hook
+    // should not spawn any threads, open any file descriptors, or
+    // modify environment variables.
+    //
+    // Therefore, as long as no native libraries have done that behind
+    // our back, it should be safe to modify the environment, all non‐
+    // standard file descriptors should be safe to take ownership of,
+    // and any socket activation environment variables should be from
+    // the spawning environment of the process.
+    #[expect(unsafe_code, reason = "see `socket_activation` module")]
+    let sockets = unsafe { ReceivedSockets::receive() }?;
 
     let cli = Autopen::parse();
 
@@ -48,7 +60,7 @@ pub fn main() -> eyre::Result<()> {
     debug!(?cli, "Executing command");
     tokio::runtime::LocalRuntime::new()
         .wrap_err("Failed to create Tokio runtime")?
-        .block_on(cli.command.run(Bootstrap::new()))
+        .block_on(cli.command.run(Bootstrap::new(sockets)))
 }
 
 /// A cryptographic signing service with an object‐capability interface.

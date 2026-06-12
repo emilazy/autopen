@@ -8,6 +8,7 @@ mod autopen_capnp;
 mod cli;
 mod local;
 mod signing_key;
+mod socket_activation;
 mod unix_socket_server;
 mod verification_key;
 mod x509;

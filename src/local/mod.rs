@@ -9,6 +9,7 @@ mod serialize;
 
 use std::{
     fmt::{self, Debug},
+    mem,
     rc::Rc,
 };
 
@@ -21,6 +22,7 @@ use crate::{
         local::{self, remote_ref},
     },
     local::restorer::Restorer,
+    socket_activation::ReceivedSockets,
 };
 pub(crate) use serialize::{Secrecy, Serialize, SerializeFile, save};
 
@@ -28,19 +30,28 @@ pub(crate) use serialize::{Secrecy, Serialize, SerializeFile, save};
 pub(crate) struct Bootstrap {
     /// The local reference restorer.
     restorer: restorer::Client,
+    /// The file descriptors that were received as part of
+    /// socket activation.
+    sockets: ReceivedSockets,
 }
 
 impl Bootstrap {
     /// Creates a new `Bootstrap` for a local context.
-    pub(crate) fn new() -> Self {
+    pub(crate) fn new(sockets: ReceivedSockets) -> Self {
         Self {
             restorer: capnp_rpc::new_client(Restorer::new()),
+            sockets,
         }
     }
 
     /// Returns a client for the local reference restorer.
     pub(crate) const fn restorer(&self) -> &restorer::Client {
         &self.restorer
+    }
+
+    /// Takes the sockets received from the environment out.
+    pub(crate) fn take_sockets(&mut self) -> ReceivedSockets {
+        mem::take(&mut self.sockets)
     }
 
     /// Load a [`SerializeFile`] implementer from a persisted file.
@@ -69,6 +80,8 @@ impl local::Server for Bootstrap {}
 
 impl Debug for Bootstrap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Bootstrap").finish_non_exhaustive()
+        f.debug_struct("Bootstrap")
+            .field("sockets", &self.sockets)
+            .finish_non_exhaustive()
     }
 }
