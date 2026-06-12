@@ -9,6 +9,7 @@ mod cli;
 mod local;
 mod signing_key;
 mod verification_key;
+mod x509;
 
 #[doc(hidden)]
 pub use cli::main;

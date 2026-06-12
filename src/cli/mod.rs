@@ -7,6 +7,7 @@
 mod sign;
 mod signing_key;
 mod verify;
+mod x509;
 
 use clap::Parser as _;
 use color_eyre::eyre::{self, WrapErr as _};
@@ -94,6 +95,8 @@ enum Command {
     Verify(verify::Command),
     #[command(subcommand)]
     SigningKey(signing_key::Command),
+    #[command(subcommand)]
+    X509(x509::Command),
 }
 
 /// An `autopen(1)` subcommand.
@@ -118,6 +121,7 @@ impl Subcommand for Command {
             Self::Sign(cmd) => cmd.run(local).await,
             Self::Verify(cmd) => cmd.run(local).await,
             Self::SigningKey(cmd) => cmd.run(local).await,
+            Self::X509(cmd) => cmd.run(local).await,
         }
     }
 }

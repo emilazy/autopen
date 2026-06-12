@@ -14,6 +14,7 @@ use std::{
 use crate::{
     autopen_capnp::{local::file, verification_key},
     local::{Serialize, SerializeFile},
+    x509,
 };
 
 /// A verification key.
@@ -99,6 +100,20 @@ impl Verifier for VerificationKey {
     fn verify(&self, message: &[u8], signature: &[u8]) -> Result<(), VerifyError> {
         match self {
             Self::Rsa3072Pkcs1Sha256(key) => key.verify(message, signature),
+        }
+    }
+}
+
+impl x509::SubjectPublicKey for VerificationKey {
+    fn algorithm(&self) -> &'static rcgen::SignatureAlgorithm {
+        match self {
+            Self::Rsa3072Pkcs1Sha256(key) => key.algorithm(),
+        }
+    }
+
+    fn to_subject_public_key(&self) -> Vec<u8> {
+        match self {
+            Self::Rsa3072Pkcs1Sha256(key) => key.to_subject_public_key(),
         }
     }
 }

@@ -49,6 +49,8 @@ capnp-rpc = { git = "https://github.com/emilazy/capnproto-rust.git", branch = "p
 clap = { version = "4.6.1", features = ["derive", "env", "unstable-markdown"] }
 color-eyre = { version = "0.6.5", features = ["issue-url"] }
 graviola = "0.4.0"
+rcgen = { version = "0.14.8", default-features = false, features = ["pem"] }
+time = { version = "0.3.49", features = ["parsing"] }
 tokio = { version = "1.52.3", features = ["fs", "macros", "rt"] }
 tracing = "0.1.44"
 tracing-error = "0.2.1"

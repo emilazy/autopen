@@ -18,6 +18,7 @@ use crate::{
     autopen_capnp::verification_key::rsa3072_pkcs1_sha256,
     local::Serialize,
     verification_key::{Verifier, VerifyError},
+    x509,
 };
 
 /// An RSA verification key with a 3072‐bit modulus.
@@ -77,6 +78,18 @@ impl Verifier for VerificationKey {
         self.0
             .verify_pkcs1_sha256(signature, message)
             .map_err(|_err| VerifyError)
+    }
+}
+
+impl x509::SubjectPublicKey for VerificationKey {
+    fn algorithm(&self) -> &'static rcgen::SignatureAlgorithm {
+        &rcgen::PKCS_RSA_SHA256
+    }
+
+    fn to_subject_public_key(&self) -> Vec<u8> {
+        let mut buf = [0; _];
+        self.to_pkcs1_der(&mut buf);
+        buf.to_vec()
     }
 }
 
