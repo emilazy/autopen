@@ -4,9 +4,11 @@
 
 {
   lib,
+  stdenv,
   rustPlatform,
   capnproto,
   newScope,
+  testers,
 }:
 
 let
@@ -16,6 +18,7 @@ let
     licenses
     maintainers
     makeScope
+    optionalAttrs
     platforms
     sourceTypes
     ;
@@ -74,6 +77,14 @@ rustPlatform.buildRustPackage (finalAttrs: {
             name = "autopen-test-rsa3072-pkcs1-sha256";
             path = ./tests/keys/test-rsa3072-pkcs1-sha256-signing-key;
           };
+        };
+      }
+      # TODO: There seems to be some Nixpkgs regression that makes
+      # starting the VM test hang on macOS.
+      // optionalAttrs (!stdenv.hostPlatform.isDarwin) {
+        nixos = testers.runNixOSTest {
+          imports = [ ./tests/nixos.nix ];
+          _module.args = { inherit autopen; };
         };
       };
     };
