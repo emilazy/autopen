@@ -5,6 +5,7 @@
 {
   lib,
   stdenvNoCC,
+  buildPackages,
   autopen,
 }:
 
@@ -20,6 +21,8 @@ let
     concatMap
     concatMapStringsSep
     extendMkDerivation
+    getLib
+    head
     isAttrs
     isDerivation
     match
@@ -92,6 +95,12 @@ let
     package = autopen;
     exe = "autopen";
     argsAttrName = "autopenArgs";
+  };
+
+  mkSystemdSbsignDerivation = mkCliDerivationBuilder {
+    package = getLib buildPackages.systemd;
+    exe = "${getLib buildPackages.systemd}/lib/systemd/systemd-sbsign";
+    argsAttrName = "systemdSbsignArgs";
   };
 
   # TODO: Explain this.
@@ -257,11 +266,92 @@ let
         };
       };
   };
+
+  authenticode = {
+    mkSignedAttrsForPe =
+      {
+        name,
+        certificate,
+        peFile,
+      }:
+      mkSystemdSbsignDerivation (finalAttrs: {
+        inherit name;
+
+        systemdSbsignArgs = [
+          "sign"
+          {
+            inherit certificate;
+            prepareOfflineSigning = true;
+            output = placeholder "out";
+          }
+          peFile
+        ];
+
+        passthru = {
+          inherit certificate peFile;
+        };
+      });
+
+    attachSignature =
+      {
+        name,
+        signature,
+      }:
+      let
+        signedAttrs = signature.message;
+      in
+      mkSystemdSbsignDerivation {
+        inherit name;
+
+        systemdSbsignArgs = [
+          "sign"
+          {
+            inherit (signedAttrs) certificate;
+            signedData = signedAttrs;
+            signedDataSignature = signature;
+            output = placeholder "out";
+          }
+          signedAttrs.peFile
+        ];
+
+        passthru = {
+          inherit (signedAttrs) certificate peFile;
+          inherit signedAttrs signature;
+        };
+      };
+
+    mkSignedPe =
+      {
+        name,
+        signingKey,
+        peFile,
+        ...
+      }@args:
+      let
+        peExtension = head (match ".+\\.([^.]+)" (baseNameOf peFile));
+      in
+      authenticode.attachSignature {
+        name = "${name}.${peExtension}";
+        signature = sign {
+          inherit signingKey;
+          message = authenticode.mkSignedAttrsForPe (
+            removeAttrs args [
+              "name"
+              "signingKey"
+            ]
+            // {
+              name = "${name}.signed-attrs.der";
+            }
+          );
+        };
+      };
+  };
 in
 {
   inherit
     sign
     signingKey
     x509
+    authenticode
     ;
 }

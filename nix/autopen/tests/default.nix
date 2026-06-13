@@ -3,10 +3,14 @@
 # SPDX-License-Identifier: BlueOak-1.0.0
 
 {
+  lib,
+  stdenv,
   writeText,
   runCommand,
   autopen,
   openssl_4_0,
+  fwupd-efi,
+  sbsigntool,
   linkFarmFromDrvs,
 }:
 
@@ -15,6 +19,8 @@
 }:
 
 let
+  inherit (lib) optionals;
+
   message = writeText "autopen-test-message" ''
     squeamish ossifrage
   '';
@@ -76,18 +82,49 @@ let
           -x509_strict \
           -- "$certificate"
       '';
+
+  fwupd-efi-signed = autopen.lib.authenticode.mkSignedPe {
+    name = "autopen-test-fwupd-efi-signed";
+    # TODO: Perhaps an abstraction for certificate + signing key would
+    # be nice?
+    inherit signingKey certificate;
+    peFile = "${fwupd-efi}/libexec/fwupd/efi/fwupd${stdenv.hostPlatform.efiArch}.efi";
+  };
+
+  check-fwupd-efi-signature =
+    runCommand "autopen-test-check-fwupd-efi-signature"
+      {
+        nativeBuildInputs = [ sbsigntool ];
+        inherit certificate;
+        signedPeFile = fwupd-efi-signed;
+        strictDeps = true;
+        __structuredAttrs = true;
+      }
+      ''
+        exec &> >(tee -- "$out")
+        sbverify --list -- "$signedPeFile"
+        sbverify --cert="$certificate" -- "$signedPeFile"
+      '';
 in
 
-linkFarmFromDrvs "autopen-test" [
-  signingKey
-  signingKey.verificationKey
+linkFarmFromDrvs "autopen-test" (
+  [
+    signingKey
+    signingKey.verificationKey
 
-  message
-  signature
-  check-signature
+    message
+    signature
+    check-signature
 
-  certificate
-  certificate.tbsCertificate
-  certificate.signature
-  check-certificate
-]
+    certificate
+    certificate.tbsCertificate
+    certificate.signature
+    check-certificate
+  ]
+  ++ optionals stdenv.hostPlatform.isLinux [
+    fwupd-efi-signed
+    fwupd-efi-signed.signedAttrs
+    fwupd-efi-signed.signature
+    check-fwupd-efi-signature
+  ]
+)
