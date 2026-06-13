@@ -10,8 +10,16 @@
 }:
 
 let
+  inherit (builtins)
+    storeDir
+    ;
+
   inherit (lib)
+    escapeRegex
     fakeHash
+    head
+    match
+    toJSON
     unsafeDiscardOutputDependency
     ;
 
@@ -57,6 +65,16 @@ let
         mkdir -- "$out"
         printf "%s\n$fakeHash\n0\n\n0\n" "$NIX_STORE/"* > "$out/registration"
       '';
+
+  testSignatureDrvHashes =
+    let
+      drvHash = drv: head (match "${escapeRegex storeDir}/([^-]+)-.*" drv.drvPath);
+    in
+    map (name: drvHash test-remote.test.entries.${name}) [
+      "autopen-test-message.sig"
+      "autopen-test-certificate.tbs-certificate.der.sig"
+      "autopen-test-fwupd-efi-signed.signed-attrs.der.sig"
+    ];
 in
 
 {
@@ -66,12 +84,17 @@ in
   # writable stores.
   nodes = {
     machine =
-      { ... }:
+      { pkgs, ... }:
       {
         nix = {
+          # TODO: Ask Nix upstream about cgroup attestation patch.
+          package = pkgs.lixPackageSets.latest.lix;
+
           settings = {
             substitute = false;
             extra-sandbox-paths = [ "/run/autopen" ];
+            extra-experimental-features = [ "cgroups" ];
+            use-cgroups = true;
           };
         };
 
@@ -99,7 +122,6 @@ in
 
             LoadCredential = "signing-key:${softwareSigningKey}";
 
-            ProtectProc = "ptraceable";
             ProcSubset = "pid";
             DynamicUser = true;
             CapabilityBoundingSet = [ "" ];
@@ -114,7 +136,9 @@ in
             ProtectKernelTunables = true;
             ProtectKernelModules = true;
             ProtectKernelLogs = true;
-            ProtectControlGroups = "strict";
+            # autopen needs to read cgroups for peer attestation, so
+            # this can’t be `private` or `strict`.
+            ProtectControlGroups = true;
             RestrictAddressFamilies = "none";
             RestrictNamespaces = true;
             LockPersonality = true;
@@ -140,6 +164,10 @@ in
     machine.succeed("nix-store --store local --load-db < ${testBuildClosureInfo}/registration")
     machine.wait_for_unit("autopen.socket")
     machine.succeed("nix-build --store daemon --verbose ${testDrvPath}")
+
+    # Check that the server attested the derivation hash of the builds.
+    for hash in ${toJSON testSignatureDrvHashes}:
+        machine.succeed(f"journalctl --unit=autopen.service --grep={hash}")
 
     machine.succeed("cp -R --dereference result out")
     machine.copy_from_machine("out", "")

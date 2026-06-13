@@ -64,7 +64,9 @@ tracing-error = "0.2.1"
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2.186"
 listen-fds = "0.1.0"
+pidfd-util = { version = "0.1.0", default-features = false }
 
 [build-dependencies]
 capnpc = { git = "https://github.com/emilazy/capnproto-rust.git", branch = "push-xstmntksusmk" }

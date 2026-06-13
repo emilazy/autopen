@@ -5,6 +5,7 @@
 //! A Unix socket server that provides access to signing keys.
 
 mod file_identity;
+mod peer_attestation;
 
 use std::{
     fmt::{self, Debug},
@@ -22,14 +23,14 @@ use capnp_rpc::{RpcSystem, rpc_twoparty_capnp::Side, twoparty::io::VatNetwork};
 use color_eyre::eyre::{self, WrapErr as _};
 use iddqd::{IdHashItem, IdHashMap, id_upcast};
 use tokio::{fs::File, io, net::UnixStream};
-use tracing::{debug, info};
+use tracing::{debug, info, record_all};
 
 use crate::{
     autopen_capnp::{
         bootstrap, restorer,
         unix_socket_server::{self, file_ref},
     },
-    unix_socket_server::file_identity::KnownReadableFile,
+    unix_socket_server::{file_identity::KnownReadableFile, peer_attestation::attest_peer},
 };
 
 /// The bootstrap interface for a Unix socket server.
@@ -50,9 +51,17 @@ impl Bootstrap {
     ///
     /// # Errors
     ///
-    /// Returns an error if the Cap’n Proto RPC system returns an error.
-    #[tracing::instrument(level = tracing::Level::INFO, ret, err)]
+    /// Returns an error if peer attestation fails, or the Cap’n Proto
+    /// RPC system returns an error.
+    #[tracing::instrument(
+        level = tracing::Level::INFO,
+        fields(peer_attestation),
+        ret,
+        err,
+    )]
     pub(crate) async fn serve(self: Rc<Self>, conn: UnixStream) -> eyre::Result<()> {
+        let peer_attestation = attest_peer(&conn).wrap_err("Failed to attest peer")?;
+        record_all!(tracing::Span::current(), ?peer_attestation);
         info!("New connection");
 
         let (rx, tx) = conn.into_split();
