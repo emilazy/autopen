@@ -6,6 +6,7 @@
   lib,
   rustPlatform,
   capnproto,
+  newScope,
 }:
 
 let
@@ -14,6 +15,7 @@ let
     importTOML
     licenses
     maintainers
+    makeScope
     platforms
     sourceTypes
     ;
@@ -50,6 +52,29 @@ rustPlatform.buildRustPackage (finalAttrs: {
   strictDeps = true;
 
   __structuredAttrs = true;
+
+  passthru =
+    let
+      # TODO: Can this work with cross‐compilation?
+      autopen = finalAttrs.finalPackage;
+      scope = makeScope newScope (_self: {
+        inherit autopen;
+      });
+    in
+    {
+      lib = scope.callPackage ./lib.nix { };
+
+      mkTest = scope.callPackage ./tests { };
+
+      tests = {
+        software-key = autopen.mkTest {
+          signingKey = autopen.lib.signingKey.import {
+            name = "autopen-test-rsa3072-pkcs1-sha256";
+            path = ./tests/keys/test-rsa3072-pkcs1-sha256-signing-key;
+          };
+        };
+      };
+    };
 
   meta = {
     description = "Cryptographic signing tool with an object‐capability interface";

@@ -80,6 +80,7 @@
         {
           inherit (self.packages.${system}) default;
         }
+        // self.packages.${system}.default.tests
         // devChecks.${system}
       );
 

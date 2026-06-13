@@ -27,6 +27,7 @@ in
       "*.capnp"
       "*.license"
       "LICENSES/*.txt"
+      "nix/autopen/tests/keys/*"
     ];
 
     formatter = {
