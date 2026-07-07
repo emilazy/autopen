@@ -97,6 +97,6 @@
         }
       );
 
-      formatter = eachSystem (system: _pkgs: treefmtEval.${system}.wrapper);
+      formatter = eachSystem (system: _pkgs: treefmtEval.${system}.config.build.wrapper);
     };
 }
