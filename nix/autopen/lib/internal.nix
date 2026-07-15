@@ -13,7 +13,9 @@ let
     isDerivation
     match
     splitStringBy
+    substring
     toLower
+    toUpper
     ;
 
   inherit (lib.generators)
@@ -43,7 +45,7 @@ in
     {
       package,
       exe,
-      argsAttrName,
+      attrPrefix,
     }:
     extendMkDerivation {
       constructDrv = stdenvNoCC.mkDerivation;
@@ -58,8 +60,12 @@ in
           nativeBuildInputs = [ package ] ++ nativeBuildInputs;
 
           buildCommand = ''
+            runHook "pre$hookName"
+
             echoCmd "$exeName flags" "''${exeFlags[@]}"
             "$exe" "''${exeFlags[@]}"
+
+            runHook "post$hookName"
           '';
 
           inherit exe;
@@ -72,7 +78,9 @@ in
               toCommandLine optionFormat component
             else
               [ (mkValueStringDefault { } component) ]
-          ) args.${argsAttrName};
+          ) args."${attrPrefix}Args";
+
+          hookName = toUpper (substring 0 1 attrPrefix) + substring 1 (-1) attrPrefix;
 
           strictDeps = true;
 
@@ -85,7 +93,7 @@ in
   mkAutopenDerivation = mkCliDerivationBuilder {
     package = autopen;
     exe = "autopen";
-    argsAttrName = "autopenArgs";
+    attrPrefix = "autopen";
   };
 
   # TODO: Explain this, too.

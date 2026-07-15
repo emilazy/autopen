@@ -27,7 +27,7 @@ let
   mkSystemdSbsignDerivation = mkCliDerivationBuilder {
     package = getLib buildPackages.systemd;
     exe = "${getLib buildPackages.systemd}/lib/systemd/systemd-sbsign";
-    argsAttrName = "systemdSbsignArgs";
+    attrPrefix = "systemdSbsign";
   };
 in
 {
@@ -49,6 +49,12 @@ in
         }
         peFile
       ];
+
+      certificateNotBefore = certificate.certificateParams.notBefore;
+
+      preSystemdSbsign = ''
+        export SOURCE_DATE_EPOCH="$(date --date="$certificateNotBefore" +%s)"
+      '';
 
       passthru = {
         inherit certificate peFile;
