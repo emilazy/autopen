@@ -14,9 +14,12 @@ identities of accessible files; it is not yet ready for production and you
 shouldn’t use it for anything.
 
 Forthcoming are support for signing over the network, better signature
-algorithms, hardware‐backed keys, and transparency logs, along with a detailed
-document explaining the model’s suitability for integrating signing into Nix
-builds while maintaining essential reproducibility properties.
+algorithms, hardware‐backed keys, and transparency logs.
+
+There is a
+[detailed explanation of the design from a Nix perspective](docs/nix-perspective.md),
+covering its suitability for integrating signing into Nix builds while
+maintaining essential reproducibility properties.
 
 ## Building
 
