@@ -6,9 +6,12 @@
 
 let
   inherit (lib)
+    concatMapStringsSep
+    escapeURL
     getLib
     head
     match
+    splitString
     ;
 
   inherit (autopen.lib)
@@ -29,6 +32,8 @@ let
     exe = "${getLib buildPackages.systemd}/lib/systemd/systemd-sbsign";
     attrPrefix = "systemdSbsign";
   };
+
+  escapeURLPath = path: concatMapStringsSep "/" escapeURL (splitString "/" path);
 in
 {
   mkSignedAttrsForPe =
@@ -42,13 +47,22 @@ in
 
       systemdSbsignArgs = [
         "sign"
+        finalAttrs.certificateArgs
         {
-          inherit certificate;
           prepareOfflineSigning = true;
           output = placeholder "out";
         }
         peFile
       ];
+
+      # `systemd-sbsign(1)` expects a PEM‐encoded certificate, but
+      # autopen produces DER-encoded certificates. We explicitly
+      # use the default OpenSSL provider, which takes `file://`
+      # URLs and accepts both encodings.
+      certificateArgs = {
+        certificateSource = "provider:default";
+        certificate = "file://${escapeURLPath "${certificate}"}";
+      };
 
       certificateNotBefore = certificate.certificateParams.notBefore;
 
@@ -74,8 +88,8 @@ in
 
       systemdSbsignArgs = [
         "sign"
+        signedAttrs.certificateArgs
         {
-          inherit (signedAttrs) certificate;
           signedData = signedAttrs;
           signedDataSignature = signature;
           output = placeholder "out";

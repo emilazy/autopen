@@ -144,21 +144,19 @@ impl<K: SubjectPublicKey + Debug> CertificateBuilder<K> {
     }
 
     /// Creates a self‐signed certificate with the given signature, and
-    /// returns the “PEM” textual encoding of a `Certificate`, as
-    /// defined in [Section 4.1.1 of RFC 5280] and [Section 5 of
-    /// RFC 7468].
+    /// returns the ASN.1 DER encoding of a `Certificate`, as defined
+    /// in [Section 4.1.1 of RFC 5280].
     ///
     /// [Section 4.1.1 of RFC 5280]: <https://www.rfc-editor.org/info/rfc5280/#section-4.1.1>
-    /// [Section 5 of RFC 7468]: <https://www.rfc-editor.org/info/rfc7468/#section-5>
     ///
     /// # Errors
     ///
     /// Returns an error if certificate generation fails.
-    pub(crate) fn self_signed_certificate_pem(self, signature: Vec<u8>) -> eyre::Result<String> {
+    pub(crate) fn self_signed_certificate_der(self, signature: Vec<u8>) -> eyre::Result<Vec<u8>> {
         let (verification_key, params) = self.prepare();
         let signature_attacher = SignatureAttacher::new(verification_key, signature);
         let certificate = params.self_signed(&signature_attacher)?;
-        Ok(certificate.pem())
+        Ok(certificate.der().to_vec())
     }
 }
 

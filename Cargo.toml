@@ -55,7 +55,7 @@ clap = { version = "4.6.1", features = [
 color-eyre = { version = "0.6.5", features = ["issue-url"] }
 graviola = "0.4.0"
 iddqd = { version = "0.4.5", default-features = false }
-rcgen = { version = "0.14.8", default-features = false, features = ["pem"] }
+rcgen = { version = "0.14.8", default-features = false }
 rustix = { version = "1.1.4", features = ["fs"] }
 time = { version = "0.3.49", features = ["parsing"] }
 tokio = { version = "1.52.3", features = ["fs", "macros", "rt", "signal"] }

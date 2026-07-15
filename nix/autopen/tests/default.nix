@@ -6,7 +6,7 @@
   autopen,
   openssl_4_0,
   fwupd-efi,
-  sbsigntool,
+  pesign,
   linkFarmFromDrvs,
 }:
 
@@ -68,7 +68,7 @@ let
       }
       ''
         exec &> >(tee -- "$out")
-        openssl asn1parse -in "$certificate" -inform pem -i
+        openssl asn1parse -in "$certificate" -inform DER -i
         openssl x509 -in "$certificate" -noout -text
         openssl verify \
           -verbose \
@@ -90,7 +90,10 @@ let
   check-fwupd-efi-signature =
     runCommand "autopen-test-check-fwupd-efi-signature"
       {
-        nativeBuildInputs = [ sbsigntool ];
+        nativeBuildInputs = [
+          pesign
+          openssl_4_0
+        ];
         inherit certificate;
         signedPeFile = fwupd-efi-signed;
         strictDeps = true;
@@ -98,8 +101,10 @@ let
       }
       ''
         exec &> >(tee -- "$out")
-        sbverify --list -- "$signedPeFile"
-        sbverify --cert="$certificate" -- "$signedPeFile"
+        pesign --export-signature=signature.p7m --in="$signedPeFile"
+        openssl asn1parse -inform DER -i -in signature.p7m
+        pesign --list-signatures --in="$signedPeFile"
+        pesigcheck --no-system-db=0 --certfile="$certificate" --in="$signedPeFile"
       '';
 in
 

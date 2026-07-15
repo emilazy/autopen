@@ -146,7 +146,7 @@ pub(crate) struct CreateCertificate {
     /// This must match the certificate subject’s public key.
     #[arg(long, value_name = "PATH")]
     signature: Utf8PathBuf,
-    /// The file to write the PEM‐encoded `Certificate` to.
+    /// The file to write the DER‐encoded `Certificate` to.
     #[arg(long, value_name = "PATH")]
     output: Utf8PathBuf,
     /// The certificate parameters.
@@ -164,10 +164,10 @@ impl Subcommand for CreateCertificate {
         let signature = fs::read(&self.signature)
             .await
             .wrap_err_with(|| format!("Failed to read signature file {}", self.signature))?;
-        let certificate_pem = builder
-            .self_signed_certificate_pem(signature)
+        let certificate_der = builder
+            .self_signed_certificate_der(signature)
             .wrap_err("Failed to create certificate")?;
-        fs::write(&self.output, certificate_pem)
+        fs::write(&self.output, certificate_der)
             .await
             .wrap_err_with(|| format!("Failed to write output file {}", self.output))?;
         Ok(())

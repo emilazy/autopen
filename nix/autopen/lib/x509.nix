@@ -63,7 +63,7 @@ in
   mkSelfSignedCertificate =
     { name, signingKey, ... }@args:
     attachSignature {
-      name = "${name}.crt";
+      name = "${name}.cer";
       signature = sign {
         inherit signingKey;
         message = mkTbsCertificateForSelfSigning (
