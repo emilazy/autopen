@@ -125,6 +125,8 @@ in
       "bans"
       "licenses"
       "sources"
+      "--deny"
+      "warnings"
     ];
   });
 }
