@@ -33,7 +33,7 @@ let
   cargoLock = {
     lockFile = ../../Cargo.lock;
     outputHashes = {
-      "capnp-0.25.5" = "sha256-L8mVQIY3trr5ORFVRdOD83Uurt2f5/qaLZJuwr8a7LI=";
+      "capnp-0.26.2" = "sha256-K7Loo9KhZ0wUY/NMrgu1WkftA4MBF2m43ZzCwVr0YAk=";
     };
   };
 in

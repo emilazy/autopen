@@ -7,6 +7,9 @@ all-features = true
 
 [bans]
 multiple-versions-include-dev = true
+skip = [
+    { crate = "syn@2.0.119", reason = "syn 3.0 is new and hasn’t yet diffused" },
+]
 
 [licenses]
 allow = ["BlueOak-1.0.0", "ISC", "MIT", "Unicode-3.0"]
