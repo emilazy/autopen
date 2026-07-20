@@ -95,6 +95,14 @@ in
 
         rule = [
           {
+            include = [ "**/REUSE.toml" ];
+            keys = [ "annotations" ];
+            formatting = {
+              reorder_keys = false;
+            };
+          }
+
+          {
             include = [ "**/Cargo.toml" ];
             keys = [ "package" ];
             formatting = {
