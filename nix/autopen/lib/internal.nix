@@ -94,7 +94,32 @@ in
     attrPrefix = "autopen";
   };
 
-  # TODO: Explain this, too.
+  /**
+    Hide a derivation’s internals.
+
+    This is used to abstract away implementation details so that
+    secret capabilities used at build time don’t trivially leak out of
+    a derivation to consumers of its outputs.
+
+    Note that pulling `drv.drvPath` pulls in the transitive build
+    dependency closure of `drv`, including built outputs, so this is
+    not foolproof. Hiding `drvPath` wouldn’t solve this, as any
+    derivation that uses the output of `drv` would itself have a
+    `drvPath` that behaves the same way. Therefore, this should
+    unfortunately be considered a best‐effort approach under current
+    Nix semantics.
+
+    # Inputs
+
+    `drv`
+    : The derivation to hide the internals of.
+
+    # Type
+
+    ```
+    hideDerivation :: Derivation -> Derivation
+    ```
+  */
   hideDerivation =
     drv:
     assert isDerivation drv && drv.outputs == [ "out" ];

@@ -14,6 +14,35 @@ let
     ;
 in
 
+/**
+  Sign a message with a signing key.
+
+  # Inputs
+
+  `signingKey`
+  : The signing key to use.
+
+  `message`
+  : The path to the message to sign.
+
+  `pos` (optional)
+  : The position for the signature derivation.
+
+  `meta` (optional)
+  : The metadata for the signature derivation.
+
+  # Type
+
+  ```
+  sign ::
+    {
+      signingKey :: SigningKey,
+      message :: StorePath,
+      pos :: { file :: String, line :: Int } | Null,
+      meta :: AttrSet,
+    } -> Derivation
+  ```
+*/
 {
   signingKey,
   message,
