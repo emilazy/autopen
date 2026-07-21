@@ -19,8 +19,8 @@ let
     ;
 
   # TODO: Explain this.
-  pathDerivation =
-    path: attrs:
+  fakeDerivation =
+    outPath: attrs:
     let
       drv = {
         type = "derivation";
@@ -30,7 +30,7 @@ let
         all = [ drv ];
         outputName = "out";
 
-        outPath = "${path}";
+        inherit outPath;
       }
       // attrs;
     in
@@ -41,7 +41,7 @@ in
   import =
     { name, path }:
     let
-      signingKey = pathDerivation path {
+      signingKey = fakeDerivation "${path}" {
         inherit name;
         inherit verificationKey;
       };
@@ -68,7 +68,7 @@ in
     let
       verificationKeyPath = args.verificationKey;
 
-      verificationKey = pathDerivation verificationKeyPath {
+      verificationKey = fakeDerivation "${verificationKeyPath}" {
         name = "${name}-verification-key";
       };
 
