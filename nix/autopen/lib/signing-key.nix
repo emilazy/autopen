@@ -4,10 +4,6 @@
 }:
 
 let
-  inherit (builtins)
-    path
-    ;
-
   inherit (lib)
     hashString
     isPath
@@ -73,7 +69,7 @@ in
       };
 
       # TODO: Especially explain this!
-      fileRefPath = path {
+      fileRefPath = builtins.path {
         path = ./.;
         name = "${name}-key-handle-${hashString "sha256" "${verificationKey}"}";
         filter = _: _: false;
