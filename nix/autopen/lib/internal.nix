@@ -85,8 +85,6 @@ in
           strictDeps = true;
 
           __structuredAttrs = true;
-
-          # TODO: `meta`.
         };
     };
 

@@ -47,11 +47,15 @@ let
 
   certificate = autopen.lib.x509.mkSelfSignedCertificate {
     name = "autopen-test-certificate";
+
     inherit signingKey;
-    purpose = "code-signing";
-    commonName = "Test Organization";
-    notBefore = "1970-01-01T00:00:00Z";
-    lifetimeDays = 365;
+
+    certificateParams = {
+      purpose = "code-signing";
+      commonName = "Test Organization";
+      notBefore = "1970-01-01T00:00:00Z";
+      lifetimeDays = 365;
+    };
   };
 
   check-certificate =
@@ -80,7 +84,8 @@ let
       '';
 
   fwupd-efi-signed = autopen.lib.authenticode.mkSignedPe {
-    name = "autopen-test-fwupd-efi-signed";
+    pname = "autopen-test-${fwupd-efi.pname}";
+    inherit (fwupd-efi) version;
     # TODO: Perhaps an abstraction for certificate + signing key would
     # be nice?
     inherit signingKey certificate;

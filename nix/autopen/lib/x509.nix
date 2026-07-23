@@ -1,6 +1,14 @@
-{ autopen }:
+{
+  lib,
+  autopen,
+}:
 
 let
+  inherit (lib)
+    extendMkDerivation
+    unsafeGetAttrPos
+    ;
+
   inherit (autopen.lib)
     sign
     ;
@@ -15,67 +23,113 @@ let
     ;
 in
 {
-  mkTbsCertificateForSelfSigning =
-    { name, ... }@args:
-    mkAutopenDerivation (finalAttrs: {
-      inherit name;
+  mkTbsCertificateForSelfSigning = extendMkDerivation {
+    constructDrv = mkAutopenDerivation;
 
-      autopenArgs = [
-        "x509"
-        "create-tbs-certificate"
-        finalAttrs.passthru.certificateParams
-        { output = placeholder "out"; }
-      ];
+    extendDrvArgs =
+      finalAttrs:
+      {
+        name,
+        passthru ? { },
+        pos ? unsafeGetAttrPos "name" args,
+        ...
+      }@args:
+      {
+        name = "${name}.tbs-certificate.der";
 
-      passthru = {
-        inherit (finalAttrs.passthru.certificateParams) verificationKey;
-        certificateParams = removeAttrs args [ "name" ];
-      };
-    });
+        autopenArgs = [
+          "x509"
+          "create-tbs-certificate"
+          finalAttrs.certificateParams
+          { output = placeholder "out"; }
+        ];
 
-  attachSignature =
-    {
-      name,
-      signature,
-    }:
-    let
-      tbsCertificate = signature.message;
-    in
-    mkAutopenDerivation {
-      inherit name;
-
-      autopenArgs = [
-        "x509"
-        "create-certificate"
-        tbsCertificate.certificateParams
-        {
-          inherit signature;
-          output = placeholder "out";
+        passthru = {
+          inherit (finalAttrs.certificateParams) verificationKey;
         }
-      ];
+        // passthru;
 
-      passthru = {
-        inherit (tbsCertificate) verificationKey certificateParams;
-        inherit tbsCertificate signature;
+        inherit pos;
       };
-    };
+  };
 
-  mkSelfSignedCertificate =
-    { name, signingKey, ... }@args:
-    attachSignature {
-      name = "${name}.cer";
-      signature = sign {
-        inherit signingKey;
-        message = mkTbsCertificateForSelfSigning (
-          removeAttrs args [
-            "name"
-            "signingKey"
-          ]
-          // {
-            name = "${name}.tbs-certificate.der";
-            inherit (signingKey) verificationKey;
+  attachSignature = extendMkDerivation {
+    constructDrv = mkAutopenDerivation;
+
+    extendDrvArgs =
+      finalAttrs:
+      {
+        name,
+        signature,
+        passthru ? { },
+        pos ? unsafeGetAttrPos "name" args,
+        ...
+      }@args:
+      let
+        tbsCertificate = signature.message;
+      in
+      {
+        name = "${name}.cer";
+
+        autopenArgs = [
+          "x509"
+          "create-certificate"
+          tbsCertificate.certificateParams
+          {
+            inherit signature;
+            output = placeholder "out";
           }
-        );
+        ];
+
+        passthru = {
+          inherit (tbsCertificate) verificationKey certificateParams;
+          inherit tbsCertificate signature;
+        }
+        // passthru;
+
+        inherit pos;
       };
-    };
+  };
+
+  mkSelfSignedCertificate = extendMkDerivation {
+    constructDrv = attachSignature;
+
+    extendDrvArgs =
+      finalAttrs:
+      {
+        name,
+        signingKey,
+        certificateParams,
+        pos ? unsafeGetAttrPos "name" args,
+        meta ? { },
+        ...
+      }@args:
+      {
+        signature = sign {
+          inherit signingKey;
+
+          message = mkTbsCertificateForSelfSigning {
+            inherit name;
+
+            certificateParams = certificateParams // {
+              inherit (signingKey) verificationKey;
+            };
+
+            inherit pos;
+
+            meta = meta // {
+              ${if meta ? description then "description" else null} = "${meta.description} (to be signed)";
+            };
+          };
+
+          inherit pos;
+
+          meta = meta // {
+            ${if meta ? description then "description" else null} = "${meta.description} (signature)";
+          };
+        };
+
+        inherit pos meta;
+      };
+  };
 }

@@ -8,10 +8,10 @@ let
   inherit (lib)
     concatMapStringsSep
     escapeURL
+    extendMkDerivation
     getLib
-    head
-    match
     splitString
+    unsafeGetAttrPos
     ;
 
   inherit (autopen.lib)
@@ -36,96 +36,132 @@ let
   escapeURLPath = path: concatMapStringsSep "/" escapeURL (splitString "/" path);
 in
 {
-  mkSignedAttrsForPe =
-    {
-      name,
-      certificate,
-      peFile,
-    }:
-    mkSystemdSbsignDerivation (finalAttrs: {
-      inherit name;
+  mkSignedAttrsForPe = extendMkDerivation {
+    constructDrv = mkSystemdSbsignDerivation;
 
-      systemdSbsignArgs = [
-        "sign"
-        finalAttrs.certificateArgs
-        {
-          prepareOfflineSigning = true;
-          output = placeholder "out";
-        }
-        peFile
-      ];
+    extendDrvArgs =
+      finalAttrs:
+      {
+        pname,
+        version,
+        certificate,
+        peFile,
+        pos ? unsafeGetAttrPos "pname" args,
+        ...
+      }@args:
+      {
+        name = "${pname}-${version}-${baseNameOf peFile}.signed-attrs.der";
 
-      # `systemd-sbsign(1)` expects a PEM‐encoded certificate, but
-      # autopen produces DER-encoded certificates. We explicitly
-      # use the default OpenSSL provider, which takes `file://`
-      # URLs and accepts both encodings.
-      certificateArgs = {
-        certificateSource = "provider:default";
-        certificate = "file://${escapeURLPath "${certificate}"}";
-      };
-
-      certificateNotBefore = certificate.certificateParams.notBefore;
-
-      preSystemdSbsign = ''
-        export SOURCE_DATE_EPOCH="$(date --date="$certificateNotBefore" +%s)"
-      '';
-
-      passthru = {
-        inherit certificate peFile;
-      };
-    });
-
-  attachSignature =
-    {
-      name,
-      signature,
-    }:
-    let
-      signedAttrs = signature.message;
-    in
-    mkSystemdSbsignDerivation {
-      inherit name;
-
-      systemdSbsignArgs = [
-        "sign"
-        signedAttrs.certificateArgs
-        {
-          signedData = signedAttrs;
-          signedDataSignature = signature;
-          output = placeholder "out";
-        }
-        signedAttrs.peFile
-      ];
-
-      passthru = {
-        inherit (signedAttrs) certificate peFile;
-        inherit signedAttrs signature;
-      };
-    };
-
-  mkSignedPe =
-    {
-      name,
-      signingKey,
-      peFile,
-      ...
-    }@args:
-    let
-      peExtension = head (match ".+\\.([^.]+)" (baseNameOf peFile));
-    in
-    attachSignature {
-      name = "${name}.${peExtension}";
-      signature = sign {
-        inherit signingKey;
-        message = mkSignedAttrsForPe (
-          removeAttrs args [
-            "name"
-            "signingKey"
-          ]
-          // {
-            name = "${name}.signed-attrs.der";
+        systemdSbsignArgs = [
+          "sign"
+          finalAttrs.certificateArgs
+          {
+            prepareOfflineSigning = true;
+            output = placeholder "out";
           }
-        );
+          peFile
+        ];
+
+        # `systemd-sbsign(1)` expects a PEM‐encoded certificate, but
+        # autopen produces DER-encoded certificates. We explicitly
+        # use the default OpenSSL provider, which takes `file://`
+        # URLs and accepts both encodings.
+        certificateArgs = {
+          certificateSource = "provider:default";
+          certificate = "file://${escapeURLPath "${certificate}"}";
+        };
+
+        certificateNotBefore = certificate.certificateParams.notBefore;
+
+        preSystemdSbsign = ''
+          export SOURCE_DATE_EPOCH="$(date --date="$certificateNotBefore" +%s)"
+        '';
+
+        inherit pos;
       };
-    };
+  };
+
+  attachSignature = extendMkDerivation {
+    constructDrv = mkSystemdSbsignDerivation;
+
+    extendDrvArgs =
+      finalAttrs:
+      {
+        pname,
+        version,
+        signature,
+        passthru ? { },
+        pos ? unsafeGetAttrPos "pname" args,
+        ...
+      }@args:
+      let
+        signedAttrs = signature.message;
+      in
+      {
+        name = "${pname}-${version}-${baseNameOf signedAttrs.peFile}.signed";
+
+        systemdSbsignArgs = [
+          "sign"
+          signedAttrs.certificateArgs
+          {
+            signedData = signedAttrs;
+            signedDataSignature = signature;
+            output = placeholder "out";
+          }
+          signedAttrs.peFile
+        ];
+
+        passthru = {
+          inherit (signedAttrs) certificate peFile;
+          inherit signedAttrs;
+        }
+        // passthru;
+
+        inherit pos;
+      };
+  };
+
+  mkSignedPe = extendMkDerivation {
+    constructDrv = attachSignature;
+
+    extendDrvArgs =
+      finalAttrs:
+      {
+        pname,
+        version,
+        signingKey,
+        certificate,
+        peFile,
+        pos ? unsafeGetAttrPos "pname" args,
+        meta ? { },
+        ...
+      }@args:
+      {
+        signature = sign {
+          inherit signingKey;
+
+          message = mkSignedAttrsForPe {
+            inherit
+              pname
+              version
+              certificate
+              peFile
+              pos
+              ;
+
+            meta = meta // {
+              ${if meta ? description then "description" else null} = "${meta.description} (to be signed)";
+            };
+          };
+
+          inherit pos;
+
+          meta = meta // {
+            ${if meta ? description then "description" else null} = "${meta.description} (signature)";
+          };
+        };
+
+        inherit pos;
+      };
+  };
 }

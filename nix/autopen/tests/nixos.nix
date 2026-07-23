@@ -11,8 +11,11 @@ let
     ;
 
   inherit (lib)
+    attrValues
     escapeRegex
     fakeHash
+    filter
+    hasSuffix
     head
     match
     toJSON
@@ -66,11 +69,7 @@ let
     let
       drvHash = drv: head (match "${escapeRegex storeDir}/([^-]+)-.*" drv.drvPath);
     in
-    map (name: drvHash test-remote.test.entries.${name}) [
-      "autopen-test-message.sig"
-      "autopen-test-certificate.tbs-certificate.der.sig"
-      "autopen-test-fwupd-efi-signed.signed-attrs.der.sig"
-    ];
+    map drvHash (filter (drv: hasSuffix ".sig" drv.name) (attrValues test-remote.test.entries));
 in
 
 {
