@@ -7,6 +7,7 @@ let
   inherit (lib)
     hashString
     isPath
+    unsafeGetAttrPos
     ;
 
   inherit (autopen.lib.internal)
@@ -35,14 +36,23 @@ in
 {
   # TODO: Document the insecurity of using this with a software key.
   import =
-    { name, path }:
+    {
+      name,
+      path,
+      pos ? unsafeGetAttrPos args "name",
+      meta ? { },
+    }@args:
     let
       signingKey = fakeDerivation "${path}" {
-        inherit name;
-        inherit verificationKey;
+        inherit name verificationKey;
+        meta = meta // {
+          ${if pos != null then "position" else null} = "${pos.file}:${toString pos.line}";
+        };
       };
+
       verificationKey = hideDerivation (mkAutopenDerivation {
         name = "${name}-verification-key";
+
         autopenArgs = [
           "signing-key"
           "get-verification-key"
@@ -51,6 +61,12 @@ in
             output = placeholder "out";
           }
         ];
+
+        inherit pos;
+
+        meta = meta // {
+          ${if meta ? description then "description" else null} = "${meta.description} (verification key)";
+        };
       });
     in
     signingKey;
@@ -60,12 +76,19 @@ in
       name,
       socketPath ? "/run/autopen/socket",
       verificationKey,
+      pos ? unsafeGetAttrPos args "name",
+      meta ? { },
     }@args:
     let
       verificationKeyPath = args.verificationKey;
 
       verificationKey = fakeDerivation "${verificationKeyPath}" {
         name = "${name}-verification-key";
+
+        meta = meta // {
+          ${if meta ? description then "description" else null} = "${meta.description} (verification key)";
+          ${if pos != null then "position" else null} = "${pos.file}:${toString pos.line}";
+        };
       };
 
       # TODO: Especially explain this!
@@ -97,5 +120,7 @@ in
       passthru = {
         inherit socketPath fileRefPath verificationKey;
       };
+
+      inherit pos meta;
     };
 }

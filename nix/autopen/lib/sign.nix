@@ -1,6 +1,13 @@
-{ autopen }:
+{
+  lib,
+  autopen,
+}:
 
 let
+  inherit (lib)
+    unsafeGetAttrPos
+    ;
+
   inherit (autopen.lib.internal)
     hideDerivation
     mkAutopenDerivation
@@ -10,7 +17,9 @@ in
 {
   signingKey,
   message,
-}:
+  pos ? unsafeGetAttrPos "message" args,
+  meta ? { },
+}@args:
 hideDerivation (mkAutopenDerivation {
   name = "${message.name}.sig";
 
@@ -33,4 +42,6 @@ hideDerivation (mkAutopenDerivation {
     # cryptographic semantics, but it’s convenient.
     inherit message;
   };
+
+  inherit pos meta;
 })
