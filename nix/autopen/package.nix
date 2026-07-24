@@ -61,7 +61,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
       });
     in
     {
-      lib = scope.callPackage ./lib.nix { };
+      lib = scope.callPackage ./lib { };
 
       mkTest = scope.callPackage ./tests { };
 
