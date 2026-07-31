@@ -6,7 +6,6 @@
 let
   inherit (lib)
     hashString
-    isPath
     unsafeGetAttrPos
     ;
 
@@ -175,9 +174,7 @@ in
       meta ? { },
     }@args:
     let
-      verificationKeyPath = args.verificationKey;
-
-      verificationKey = fakeDerivation "${verificationKeyPath}" {
+      verificationKey = fakeDerivation "${args.verificationKey}" {
         name = "${name}-verification-key";
 
         meta = meta // {
@@ -218,7 +215,6 @@ in
         filter = _: _: false;
       };
     in
-    assert isPath verificationKeyPath;
     mkAutopenDerivation {
       name = "${name}-signing-key";
 
