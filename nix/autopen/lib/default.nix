@@ -1,7 +1,5 @@
 { callPackage }:
 
-# TODO: There’s probably issues with cross‐compilation here.
-
 {
   internal = callPackage ./internal.nix { };
   signingKey = callPackage ./signing-key.nix { };
