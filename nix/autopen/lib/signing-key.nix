@@ -95,7 +95,7 @@ in
     {
       name,
       path,
-      pos ? unsafeGetAttrPos args "name",
+      pos ? unsafeGetAttrPos "name" args,
       meta ? { },
     }@args:
     let
@@ -171,7 +171,7 @@ in
       name,
       socketPath ? "/run/autopen/socket",
       verificationKey,
-      pos ? unsafeGetAttrPos args "name",
+      pos ? unsafeGetAttrPos "name" args,
       meta ? { },
     }@args:
     let
