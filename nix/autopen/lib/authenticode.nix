@@ -124,6 +124,9 @@ in
   mkSignedPe = extendMkDerivation {
     constructDrv = attachSignature;
 
+    # Ensure that the signing key doesn’t leak from the derivation.
+    excludeDrvArgNames = [ "signingKey" ];
+
     extendDrvArgs =
       finalAttrs:
       {
