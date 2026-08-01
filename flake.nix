@@ -29,7 +29,9 @@
     let
       inherit (nixpkgs.lib)
         attrValues
+        extends
         genAttrs
+        makeScope
         ;
 
       systems = [
@@ -63,11 +65,11 @@
       packages = eachSystem (
         _system: pkgs:
         let
-          autopen = pkgs.callPackage ./nix/autopen/package.nix { };
+          scope = makeScope pkgs.newScope (extends self.overlays.default (_self: { }));
         in
         {
-          inherit autopen;
-          default = autopen;
+          inherit (scope) autopen;
+          default = scope.autopen;
         }
       );
 
