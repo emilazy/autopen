@@ -24,10 +24,10 @@ in
 
     excludes = [
       ".editorconfig"
+      "*.bin"
       "*.capnp"
       "*.license"
       "LICENSES/*.txt"
-      "nix/autopen/tests/keys/*"
     ];
 
     formatter = {

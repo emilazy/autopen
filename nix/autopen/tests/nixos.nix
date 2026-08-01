@@ -22,11 +22,11 @@ let
     unsafeDiscardOutputDependency
     ;
 
-  test-remote = autopen.test-remote.override {
+  remoteKeyTest = autopen.remoteKeyTest.override {
     socketPath = "/run/autopen/socket";
   };
 
-  inherit (test-remote)
+  inherit (remoteKeyTest)
     softwareSigningKey
     remoteSigningKey
     test
@@ -69,7 +69,7 @@ let
     let
       drvHash = drv: head (match "${escapeRegex storeDir}/([^-]+)-.*" drv.drvPath);
     in
-    map drvHash (filter (drv: hasSuffix ".sig" drv.name) (attrValues test-remote.test.entries));
+    map drvHash (filter (drv: hasSuffix ".sig" drv.name) (attrValues remoteKeyTest.test.entries));
 in
 
 {
@@ -150,7 +150,7 @@ in
         };
 
         virtualisation.additionalPaths = [
-          autopen.tests.software-key.drvPath
+          autopen.tests.softwareKey.drvPath
         ];
       };
   };

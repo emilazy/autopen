@@ -45,14 +45,16 @@ rustPlatform.buildRustPackage {
 
     mkTest = callPackage ./tests { };
 
-    test-remote = callPackage ./tests/remote.nix { };
+    testSigningKey = autopen.lib.signingKey.import {
+      name = "autopen-test-rsa3072-pkcs1-sha256";
+      path = ./tests/test-rsa3072-pkcs1-sha256-signing-key.bin;
+    };
+
+    remoteKeyTest = callPackage ./tests/remote.nix { };
 
     tests = {
-      software-key = autopen.mkTest {
-        signingKey = autopen.lib.signingKey.import {
-          name = "autopen-test-rsa3072-pkcs1-sha256";
-          path = ./tests/keys/test-rsa3072-pkcs1-sha256-signing-key;
-        };
+      softwareKey = autopen.mkTest {
+        signingKey = autopen.testSigningKey;
       };
     }
     # TODO: There seems to be some Nixpkgs regression that makes

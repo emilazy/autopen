@@ -93,11 +93,11 @@ understanding the API:
 * `autopen.mkTest` (`nix/autopen/tests/default.nix`) takes a caller‐specified
   signing key and produces an X.509 code signing certificate for it. On Linux,
   the certificate is then used to sign the fwupd UEFI executable from Nixpkgs.
-* `autopen.tests.software-key` instantiates `autopen.test` with a test software
+* `autopen.tests.softwareKey` instantiates `autopen.test` with a test software
   key.
-* `autopen.test-remote` (`nix/autopen/tests/remote.nix`) contains
-  `autopen.test-remote.server`, which starts a signing server on
-  `/tmp/autopen/socket` when run, and `autopen.test-remote.test`, which
+* `autopen.remoteKeyTest` (`nix/autopen/tests/remote.nix`) contains
+  `autopen.remoteKeyTest.server`, which starts a signing server on
+  `/tmp/autopen/socket` when run, and `autopen.remoteKeyTest.test`, which
   instantiates `autopen.test` with the corresponding remote signing key. After
   starting the server, you can then build the test with
   `--extra-sandbox-paths /tmp/autopen`.

@@ -8,11 +8,11 @@
 let
   inherit (lib) escapeShellArg;
 
-  softwareSigningKey = "${./keys/test-rsa3072-pkcs1-sha256-signing-key}";
+  softwareSigningKey = autopen.testSigningKey;
 
   remoteSigningKey = autopen.lib.signingKey.remote {
     name = "autopen-test-remote-rsa3072-pkcs1-sha256";
-    verificationKey = ./keys/test-rsa3072-pkcs1-sha256-verification-key;
+    inherit (softwareSigningKey) verificationKey;
     inherit socketPath;
   };
 
