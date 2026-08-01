@@ -7,13 +7,18 @@
   testers,
 }:
 
-let
-  cargoToml = lib.importTOML ../../Cargo.toml;
+rustPlatform.buildRustPackage (finalAttrs: {
+  pname = "autopen";
+  version = "0.1.0";
 
-  src = lib.fileset.toSource {
-    root = ../../.;
-    fileset = lib.fileset.unions (map (subPath: ../../. + subPath) cargoToml.package.include);
-  };
+  src =
+    let
+      cargoToml = lib.importTOML ../../Cargo.toml;
+    in
+    lib.fileset.toSource {
+      root = ../../.;
+      fileset = lib.fileset.unions (map (subPath: ../../. + subPath) cargoToml.package.include);
+    };
 
   cargoLock = {
     lockFile = ../../Cargo.lock;
@@ -21,13 +26,6 @@ let
       "capnp-0.26.2" = "sha256-K7Loo9KhZ0wUY/NMrgu1WkftA4MBF2m43ZzCwVr0YAk=";
     };
   };
-in
-
-rustPlatform.buildRustPackage (finalAttrs: {
-  pname = "autopen";
-  version = "0.1.0";
-
-  inherit src cargoLock;
 
   nativeBuildInputs = [
     capnproto
