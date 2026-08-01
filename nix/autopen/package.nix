@@ -8,22 +8,11 @@
 }:
 
 let
-  inherit (lib)
-    fileset
-    importTOML
-    licenses
-    maintainers
-    makeScope
-    optionalAttrs
-    platforms
-    sourceTypes
-    ;
+  cargoToml = lib.importTOML ../../Cargo.toml;
 
-  cargoToml = importTOML ../../Cargo.toml;
-
-  src = fileset.toSource {
+  src = lib.fileset.toSource {
     root = ../../.;
-    fileset = fileset.unions (map (subPath: ../../. + subPath) cargoToml.package.include);
+    fileset = lib.fileset.unions (map (subPath: ../../. + subPath) cargoToml.package.include);
   };
 
   cargoLock = {
@@ -56,7 +45,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
     let
       # TODO: Can this work with cross‐compilation?
       autopen = finalAttrs.finalPackage;
-      scope = makeScope newScope (_self: {
+      scope = lib.makeScope newScope (_self: {
         inherit autopen;
       });
     in
@@ -77,7 +66,7 @@ rustPlatform.buildRustPackage (finalAttrs: {
       }
       # TODO: There seems to be some Nixpkgs regression that makes
       # starting the VM test hang on macOS.
-      // optionalAttrs (!stdenv.hostPlatform.isDarwin) {
+      // lib.optionalAttrs (!stdenv.hostPlatform.isDarwin) {
         nixos = testers.runNixOSTest {
           imports = [ ./tests/nixos.nix ];
           _module.args = { inherit autopen; };
@@ -88,10 +77,10 @@ rustPlatform.buildRustPackage (finalAttrs: {
   meta = {
     description = "Cryptographic signing tool with an object‐capability interface";
     homepage = "https://github.com/emilazy/autopen";
-    license = licenses.blueOak100;
-    sourceProvenance = [ sourceTypes.fromSource ];
-    maintainers = [ maintainers.emily ];
+    license = lib.licenses.blueOak100;
+    sourceProvenance = [ lib.sourceTypes.fromSource ];
+    maintainers = [ lib.maintainers.emily ];
     mainProgram = "autopen";
-    platforms = platforms.unix;
+    platforms = lib.platforms.unix;
   };
 })
