@@ -6,6 +6,7 @@
   capnproto,
   autopen,
   testers,
+  pkgsLinux,
 }:
 
 rustPlatform.buildRustPackage {
@@ -56,13 +57,12 @@ rustPlatform.buildRustPackage {
       softwareKey = autopen.mkTest {
         signingKey = autopen.testSigningKey;
       };
-    }
-    # TODO: There seems to be some Nixpkgs regression that makes
-    # starting the VM test hang on macOS.
-    // lib.optionalAttrs (!stdenv.hostPlatform.isDarwin) {
+
       nixos = testers.runNixOSTest {
         imports = [ ./tests/nixos.nix ];
-        _module.args = { inherit autopen; };
+        _module.args = {
+          inherit (pkgsLinux) autopen;
+        };
       };
     };
   };

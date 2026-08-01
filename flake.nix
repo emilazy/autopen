@@ -65,7 +65,13 @@
       packages = eachSystem (
         _system: pkgs:
         let
-          scope = makeScope pkgs.newScope (extends self.overlays.default (_self: { }));
+          scope = makeScope pkgs.newScope (
+            extends self.overlays.default (_self: {
+              pkgsLinux = makeScope pkgs.pkgsLinux.newScope (_self: {
+                inherit (self.packages.${pkgs.pkgsLinux.stdenv.hostPlatform.system}) autopen;
+              });
+            })
+          );
         in
         {
           inherit (scope) autopen;
