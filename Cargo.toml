@@ -4,7 +4,7 @@
 
 [package]
 name = "autopen"
-version = "0.1.0"
+version = "0.2.0"
 description = "A cryptographic signing service with an object‐capability interface"
 categories = [
     "command-line-utilities",
