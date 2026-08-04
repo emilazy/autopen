@@ -50,6 +50,7 @@ in
           "--config"
           "${(pkgs.formats.toml { }).generate ".rumdl.toml" {
             MD013 = {
+              headings = false;
               reflow = true;
               reflow-mode = "normalize";
             };
